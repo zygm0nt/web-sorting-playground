@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Sorting Visualizer</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-900 text-white flex flex-col items-center p-6">
+        <h1 class="text-3xl font-bold mb-4">Sorting Visualizer</h1>
+        <select id="algorithm" class="mb-4 p-2 bg-gray-800 rounded">
+            <option value="bubble">Bubble Sort</option>
+            <option value="quick">Quick Sort</option>
+        </select>
+        <button
+            onclick="startSort()"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-4"
+        >
+            Start Sorting
+        </button>
+        <div
+            id="container"
+            class="flex items-end h-64 w-full max-w-4xl bg-gray-800"
+        ></div>
+
+        <script>
+            let socket;
+            let container = document.getElementById("container");
+
+            function drawBars(data) {
+                container.innerHTML = "";
+                let maxVal = Math.max(...data);
+                data.forEach((val) => {
+                    let div = document.createElement("div");
+                    div.style.height = (val / maxVal) * 100 + "%";
+                    div.className = "bg-green-400 mx-0.5 w-full";
+                    container.appendChild(div);
+                });
+            }
+
+            function startSort() {
+                const algo = document.getElementById("algorithm").value;
+                socket = new WebSocket(`ws://${location.host}/ws`);
+                socket.onopen = () => {
+                    socket.send(JSON.stringify({ algorithm: algo }));
+                };
+                socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.done) {
+                        console.log("Sorting finished");
+                        return;
+                    }
+                    drawBars(data);
+                };
+            }
+        </script>
+    </body>
+</html>
